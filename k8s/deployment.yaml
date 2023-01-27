@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-k8s
+  namespace: default
+  labels:
+    app: test-k8s
+spec:
+  selector:
+    matchLabels:
+      app: test-k8s
+  template:
+    metadata:
+      labels:
+        app: test-k8s
+    spec:
+      containers:
+      - name: test-k8s
+        image: afy22/test-k8s:latest
+        env:
+        - name: MAIN_PORT
+          value: "3000"
+        - name: ENVIRONMENT
+          value: "DEVELOPMENT"
+        - name: MONGO_URI
+          value: "mongodb://13.229.154.55:27017/test_db"
+        ports:
+        - containerPort: 3000
+        readinessProbe:
+          tcpSocket:
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healths
+            port: 3000
+        imagePullPolicy: Always
+      serviceAccountName: default
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-k8s
+  namespace: default
+spec:
+  selector:
+    app: test-k8s
+  ports:
+    - protocol: TCP
+      port: 3000
+  type: NodePort
